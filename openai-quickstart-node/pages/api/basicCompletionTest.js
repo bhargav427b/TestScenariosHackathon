@@ -8,6 +8,7 @@ let zsessionid = "_AUMlbwE4RF6wlFFx50VnXsYV8aU1xEbqdtouimIpzg";
 let workProductNumber = "\"S241169\"";
 let arrayOfEntryObjects = [];
 const axios = require('axios');
+require("dotenv").config();
 const { response } = require('express');
 
 /*Obtain ZSessionID of the user
@@ -51,7 +52,7 @@ axios.get(apiEndpoint,
 
 const { Configuration, OpenAIApi } = require("openai");
 const configuration = new Configuration({
-    apiKey: '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',
+    apiKey: process.env.OPENAI_API_KEY,
 });
 const openai = new OpenAIApi(configuration);
 var acceptanceCriteria = `Write top 10 end to end test cases for following acceptance criteria:
