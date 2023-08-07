@@ -1,0 +1,32 @@
+
+import { Configuration, OpenAIApi } from "openai";
+
+const configuration = new Configuration({
+  apiKey: process.env.OPENAI_API_KEY,
+});
+const openai = new OpenAIApi(configuration);
+
+export default async function (req, res) {
+    if (!configuration.apiKey) {
+      res.status(500).json({
+        error: {
+          message: "OpenAI API key not configured, please follow instructions in README.md",
+        }
+      });
+      return;
+    }
+
+try{
+const response = openai.createCompletion({
+  model: "text-davinci-003",
+  prompt: "Can you please Write positive and negative test cases for following acceptance criteria:\nAcceptance Criteria:\n1. Create one admin global right that can provide a user with right to perform CRUD operations to group and re-order the tiles of CITs, CMO's and Teams like  Tile administrator \n\nAccess Right - Tiles - Administer\n\nDescription - Allows user to create, edit, delete groups, move the tiles with-in and across groups in the new user experience\n\nAllows user to configure and organize tiles for Investments and Custom Objects in the new user experience.\n\n2. User with Tile administrator + respective workspace navigate  right can create a group and perform CUD operation on group\n\na. User with or without admin rights will be able to view the groups and tiles with in the group\n3.User with Tiles admin + navigate right of CIT/CMO/Team  logs into clarity and navigate to a CIT/CMO/Team's workspace for the first time then user \n\nwill be able to click on 'Configure'  and view the 'Configure Edit' screen \n\n\n\nWhen the user is in 'Configure Edit' screen, The 'Configure' button label will change to 'Done' with dark background \n\n\n4. Tile admin user clicks on 'New Group' to create/insert a group\n5. User sees a text box and color drop down along with Delete icon\n6. User can enter name, select a color and a new group is created and inserted at the top of the page\n\na. User can use the drag handle and move the group in Edit mode\n\nb. In Edit mode, user can move, rename, recolor or delete groups\n\n7. User can click on 'Done' in 'Configure Edit' screen once the edit is completed.. Screen navigates to respective Workspace page reflecting the the changes done in 'Configure Edit' screen\n\n8. User can use the drag handle on the tile to move a tile into group\n9. User can move the tiles with-in, across groups and also to no-group area\n10. User can delete the group and the tiles in the group will move to no-group area at the bottom of the screen\n11. While creating the group, group will appear at the top pushing down the existing groups but once the screen refreshes then groups are arranged according to alphabetical order\n\n12. When a group is deleted the tiles are moved to bottom of the screen that can be treated as default group \n\n13. Admin Permission use cases:\n\n1. The non-admin user will not see any groups that only contain tiles they do not have access to. These groups will be hidden from them.\n2. Non-admin users will also not see any groups that have no tiles. \n3. The non-admin user will see groups that contain a combination of tiles that they have access to and don't have access to. They will only see tiles they have permission to access.\n4. Admins will always see all groups that are created, including groups that don't contain any tiles.\n5. Non-admin: If there are no groups displayed for a non-admin and if there are Tiles that are not distributed across groups for which the non-admin has access to, then they should be displayed in default group. In this case we need to make sure that they are not displayed at bottom but positioned appropriately in the screen.\n\nUpgrade: After upgrade CIT, CMO. Team tiles appears at the bottom of the screen\nKeyboard support for Drag and Drop \nWCAG compliant\n\nLocalisation support: User should be able to see the name of the group in localised language\n\nPositive Test Cases:\n\n1. Verify that a user with the Tile administrator right is able to create, edit, delete, and reorganize groups and tiles.\n2. Verify that a user with the Tile administrator right and a workspace navigation right is able to create a group and perform CRUD operations on the group.\n3. Verify that a user with or without admin rights is able to view the groups and the tiles within each group.\n4. Verify that a user with the Tile administrator right and a workspace navigation right is able to view the Configure Edit screen upon logging in to the workspace for the first time.\n5. Verify that the Configure button label changes to Done when the user is in the Configure Edit screen.\n6. Verify that the user is able to enter a name, select a color and create a new group at the top of the page.\n7. Verify that the user is able to move, rename, recolor or delete groups in Edit mode.\n8. Verify that the user is able to click on Done in the Configure Edit screen to navigate to the workspace page and view the changes.\n9. Verify that the user is able to move tiles within and across groups and to the no\n\nPositive Test Cases:\n1. Verify that the admin user has the right to create, edit and delete groups, move the tiles within and across groups in the new user experience.\n2. Verify that the user with the Tile administrator + respective workspace navigate right can create a group and perform CUD operation on the group.\n3. Verify that all users can view the groups and tiles within the group.\n4. Verify that the Tile admin user can click on 'New Group' to create/insert a group.\n5. Verify that the user can enter name, select a color and a new group is created and inserted at the top of the page.\n6. Verify that the user can use the drag handle and move the group in Edit mode.\n7. Verify that the user can move, rename, recolor or delete groups in Edit mode.\n8. Verify that the user can click on 'Done' in 'Configure Edit' screen once the edit is completed.\n9. Verify that the user can use the drag handle on the tile to move a tile into the group.\n10. Verify that the user can move the tiles within, across groups and also to no-group area.\n11. Verify that the",
+  temperature: 0.7,
+  max_tokens: 10000,
+  top_p: 1,
+  frequency_penalty: 0,
+  presence_penalty: 0,
+});
+res.status(200).json({result: response.data.choices[0].text});
+}catch(error){
+    console.log(error);
+}}
