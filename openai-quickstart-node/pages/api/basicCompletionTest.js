@@ -1,16 +1,25 @@
 let testcaseDescription = "";
 let userName = "ashok.kumar@broadcom.com";//Get the username from front End
 let password = "AprWings2022";//Get the password from front End;
-let apiEndpoint = "";
+let apiEndpoint, workItemDescription,description = "";
+let workProductID = 0;
 let zsessionid = "_AUMlbwE4RF6wlFFx50VnXsYV8aU1xEbqdtouimIpzg";
 let workProductNumber = "\"S241169\"";
 let arrayOfEntryObjects = [];
 const axios = require('axios');
 require("dotenv").config();
 const { response } = require('express');
+//Making connection with ChatGPT
+const { Configuration, OpenAIApi } = require("openai");
+const configuration = new Configuration({
+    apiKey: process.env.OPENAI_API_KEY,
+});
+//Creating openai object
+const openai = new OpenAIApi(configuration);
 
-//EndPoint Get Story or feature Object ID
+//EndPoint URL to get Story or feature Object ID
 apiEndpoint = "https://rally1.rallydev.com/slm/webservice/v2.x/hierarchicalrequirement?query=(FormattedID = " + workProductNumber + ")&fetch=ObjectID";
+
 //Making the API call to get Object ID
 axios.get(apiEndpoint,
     {
@@ -19,33 +28,41 @@ axios.get(apiEndpoint,
             "zsessionid": zsessionid
         }
     }).then((data) => {
-        var workProductID = data.data.QueryResult.Results[0].ObjectID;
-        generateText(workProductID);
+        workProductID = data.data.QueryResult.Results[0].ObjectID;
+        getDescriptionOfWorkItem(workProductID);
+        
     });
-
-//Making connection with ChatGPT
-const { Configuration, OpenAIApi } = require("openai");
-const configuration = new Configuration({
-    apiKey: process.env.OPENAI_API_KEY,
-});
-//Creating openai object
-const openai = new OpenAIApi(configuration);
-var acceptanceCriteria = `Write top 10 end to end test cases for following acceptance criteria:
-Acceptance Criteria:
-1. Create one admin global right that can provide a user with right to perform CRUD operations to group and re-order the tiles of CITs, CMO's and Teams like  Tile administrator 
-`
+console.log("workProductID is: "+workProductID);
+async function getDescriptionOfWorkItem(workProductID){
+    workItemDescription  = "https://rally1.rallydev.com/slm/webservice/v2.0/hierarchicalrequirement/" + workProductID + "?fetch=Description";
+    console.log("workItemDescription URL is: "+workItemDescription);
+    axios.get(workItemDescription,
+        {
+            headers: {
+                "Content-Type": "application/json",
+                "zsessionid": zsessionid
+            }
+        }).then((data) => {
+            description = data.data.HierarchicalRequirement.Description;
+            var acceptanceCriteria = "Can you please use the Acceptance Criteria from below text and create at least 50 end to end test cases without steps?" + description;
+            generateText(workProductID, acceptanceCriteria);
+            console.log("Description inside is: "+ description);
+        });
+    }
 
 //Making API call to ChatGPT
-async function generateText(workProductID) {
+async function generateText(workProductID, acceptanceCriteria) {
     try {
+        console.log("Accepatnace Criteria inside generateTex methods is: "+ acceptanceCriteria);
         const response = await openai.createCompletion({
             model: "text-davinci-003",
             prompt: acceptanceCriteria,
             temperature: 0.7,
             max_tokens: 2048,
         });
-        //Formatting API response so that it can be entered in Rally
+        //Formatting API response so that it can be entered in Rally       
         const testCases = response.data.choices[0].text.split('\n').filter(point => point.trim() !== '');
+        console.log("ChatGpt response is: "+ response.data.choices[0].text.split('\n'));
         const testCaseDesc = testCases.slice(testCases.indexOf('Test Cases:') + 1).map((testCase) => testCase.substr(testCase.indexOf(' ') + 1));
         console.log('response::', testCaseDesc);
         //Request batch payload for Rally
