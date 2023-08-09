@@ -1,57 +1,104 @@
 import Head from "next/head";
 import { useState } from "react";
 import styles from "./index.module.css";
+import { insertTestScenarios } from "./api/basicCompletionTest";
 
 export default function Home() {
-  const [animalInput, setAnimalInput] = useState("");
-  const [result, setResult] = useState();
+  const [storyIdInput, setStoryIdInput] = useState("");
+  const [apiKeyInput, setApiKeyInput] = useState("");
+  const [selectedOption, setSelectedOption] = useState("chatGPT");
+  const [testScenarios, setTestScenarios] = useState([]);
 
   async function onSubmit(event) {
     event.preventDefault();
-    try {
-      const response = await fetch("/api/generate", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ animal: animalInput }),
-      });
-
-      const data = await response.json();
-      if (response.status !== 200) {
-        throw data.error || new Error(`Request failed with status ${response.status}`);
+    if (selectedOption === "chatGPT") {
+      // Call ChatGPT API
+      // insertTestScenarios(storyIdInput);
+    } else if (selectedOption === "bard") {
+      // Call Bard API
+      // insertBardScenarios(storyIdInput);
+    }
+    if (storyIdInput && apiKeyInput) {
+      let fetchedTestScenarios = await insertTestScenarios(storyIdInput, apiKeyInput);
+      if (fetchedTestScenarios) {
+        fetchedTestScenarios = fetchedTestScenarios.filter(item => {
+          let scenario = item.toLocaleLowerCase();
+          return scenario.indexOf("cases") !== 0 && scenario !== "<ul>" && scenario !== "</ul>";
+        });
+        setTestScenarios(fetchedTestScenarios);
+        console.log(fetchedTestScenarios);
       }
-
-      setResult(data.result);
-      setAnimalInput("");
-    } catch(error) {
-      // Consider implementing your own error handling logic here
-      console.error(error);
-      alert(error.message);
     }
   }
 
   return (
     <div>
       <Head>
-        <title>OpenAI Quickstart</title>
-        <link rel="icon" href="/dog.png" />
+        <title>Rally Test Scenarios Generator</title>
       </Head>
 
       <main className={styles.main}>
-        <img src="/dog.png" className={styles.icon} />
-        <h3>Name my pet</h3>
+        <h3>Rally Test Scenarios Generator</h3>
         <form onSubmit={onSubmit}>
+        <label className={styles.label}>Rally Story Id:</label>
+            <input
+              type="text"
+              name="story_id"
+              placeholder="Enter Story Id"
+              value={storyIdInput}
+              onChange={(e) => setStoryIdInput(e.target.value)}
+              autoComplete="off"
+            />
+            <label className={styles.label}>Rally API Key:</label>
+            <input
+              type="text"
+              name="api_key"
+              placeholder="Enter API Key"
+              value={apiKeyInput}
+              onChange={(e) => setApiKeyInput(e.target.value)}
+              autoComplete="off"
+            />
+            <a href="https://knowledge.broadcom.com/external/article?articleId=10814" target="_blank" className={styles.link}>Don't know where to get API key ?</a>
+          <div className={styles.choice}>
+            <label>
+                <input
+                  type="radio"
+                  name="apiOption"
+                  value="chatGPT"
+                  checked={selectedOption === "chatGPT"}
+                  onChange={() => setSelectedOption("chatGPT")}
+                />
+                ChatGPT
+            </label>
+            <label>
+              <input
+                type="radio"
+                name="apiOption"
+                value="bard"
+                checked={selectedOption === "bard"}
+                onChange={() => setSelectedOption("bard")}
+              />
+              Bard
+            </label>
+          </div>
           <input
-            type="text"
-            name="animal"
-            placeholder="Enter an animal"
-            value={animalInput}
-            onChange={(e) => setAnimalInput(e.target.value)}
-          />
-          <input type="submit" value="Generate names" />
+              type="submit"
+              value="Generate Test Scenarios"
+            />
         </form>
-        <div className={styles.result}>{result}</div>
+
+      {testScenarios.length > 0 ? (
+        <fieldset className={styles.scenarios}>
+          <legend><b>Test Scenarios inserted in Rally are: </b></legend>
+          <ul>
+            {testScenarios.map((testScenario, index) => (
+              <li key={index} dangerouslySetInnerHTML={{ __html: testScenario }} />
+            ))}
+          </ul>
+        </fieldset>
+      ) : (
+        <p></p>
+      )}
       </main>
     </div>
   );
