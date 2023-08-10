@@ -24,10 +24,11 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding-top: 60px;
+  padding-top: 15px;
 }
 .main .icon {
-  width: 34px;
+  height: 45px;
+  width: 82px;
 }
 .main h3 {
   font-size: 32px;
@@ -87,4 +88,8 @@
   position: absolute;
   margin-top: 8.5rem;
   margin-left: 21rem;
+}
+
+.main .bard {
+  padding-left: 25px;
 }

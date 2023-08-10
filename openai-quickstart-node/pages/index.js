@@ -8,9 +8,13 @@ export default function Home() {
   const [apiKeyInput, setApiKeyInput] = useState("");
   const [selectedOption, setSelectedOption] = useState("chatGPT");
   const [testScenarios, setTestScenarios] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+
 
   async function onSubmit(event) {
     event.preventDefault();
+    setIsLoading(true); // Set loading state to true
+  
     if (selectedOption === "chatGPT") {
       // Call ChatGPT API
       // insertTestScenarios(storyIdInput);
@@ -18,18 +22,25 @@ export default function Home() {
       // Call Bard API
       // insertBardScenarios(storyIdInput);
     }
+    
     if (storyIdInput && apiKeyInput) {
-      let fetchedTestScenarios = await insertTestScenarios(storyIdInput, apiKeyInput);
-      if (fetchedTestScenarios) {
-        fetchedTestScenarios = fetchedTestScenarios.filter(item => {
-          let scenario = item.toLocaleLowerCase();
-          return scenario.indexOf("cases") !== 0 && scenario !== "<ul>" && scenario !== "</ul>";
-        });
-        setTestScenarios(fetchedTestScenarios);
-        console.log(fetchedTestScenarios);
+      try {
+        let fetchedTestScenarios = await insertTestScenarios(storyIdInput, apiKeyInput);
+        if (fetchedTestScenarios) {
+          fetchedTestScenarios = fetchedTestScenarios.filter(item => {
+            let scenario = item.toLocaleLowerCase();
+            return scenario.indexOf("cases") !== 0 && scenario !== "<ul>" && scenario !== "</ul>";
+          });
+          setTestScenarios(fetchedTestScenarios);
+          console.log(fetchedTestScenarios);
+        }
+      } catch (error) {
+        console.error("Error fetching test scenarios:", error);
+      } finally {
+        setIsLoading(false); // Reset loading state to false
       }
     }
-  }
+  }  
 
   return (
     <div>
@@ -38,6 +49,7 @@ export default function Home() {
       </Head>
 
       <main className={styles.main}>
+      <img src="/clarity.jpg" className={styles.icon} />
         <h3>Rally Test Scenarios Generator</h3>
         <form onSubmit={onSubmit}>
         <label className={styles.label}>Rally Story Id:</label>
@@ -70,7 +82,7 @@ export default function Home() {
                 />
                 ChatGPT
             </label>
-            <label>
+            <label className={styles.bard}>
               <input
                 type="radio"
                 name="apiOption"
@@ -82,9 +94,10 @@ export default function Home() {
             </label>
           </div>
           <input
-              type="submit"
-              value="Generate Test Scenarios"
-            />
+            type="submit"
+            value={isLoading ? "Generating..." : "Generate Test Scenarios"}
+            disabled={isLoading}
+          />
         </form>
 
       {testScenarios.length > 0 ? (
